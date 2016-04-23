@@ -168,10 +168,68 @@ class AAATree
     {
     
     }
+
+
+private:  //private functions for splay
+	void splayUp(SplayNode *x);
+	void splayDown(SplayNode *x);
+	void splayLrot(SplayNode *x){
+		SplayNode *p = x->par;
+		splayDown(p); splayDown(x);
+		if (p->isroot){
+			p->isroot = false;
+			x->isroot = true;
+		}
+		x->par = p->par;
+		if (p->par != NULL)
+			if (p->par->child[0] == p) p->par->child[0] = x; else p->par->child[1] = x;
+		p->par = x;
+		x->child[1]->par = p;
+		p->child[0] = x->child[1];
+		x->child[1] = p;
+		splayUp(p);
+	}
+	void splayRrot(SplayNode *x){
+		SplayNode *p = x->par;
+		splayDown(p); splayDown(x);
+		if (p->isroot){
+			p->isroot = false;
+			x->isroot = true;
+		}
+		x->par = p->par;
+		if (p->par != NULL)
+			if (p->par->child[0] == p) p->par->child[0] = x; else p->par->child[1] = x;
+		p->par = x;
+		x->child[0]->par = p;
+		p->child[1] = x->child[0];
+		x->child[0] = p;
+		splayUp(p);
+	}
+
+
+public:
     //Insert SplayNode y into the splay which contain SplayNode x
     void insert(SplayNode *y, SplayNode *x)
     {
-    
+		while (!x->isroot) x = x->par;
+		for (;;){
+			if (y->? < x->?){
+				x = x->left;
+				if (x == NULL){
+					x->left = y;
+					y->par = x;
+					return;
+				}
+			}
+			else{
+				x = x->right;
+				if (x == NULL){
+					x->right = y;
+					y->par = x;
+					return;
+				}
+			}
+		}
     }
     //Maintain Data of SplayNode x
     void maintain(SplayNode *x)
@@ -185,7 +243,42 @@ class AAATree
     }
     void splay(SplayNode *x)
     {
-        
+		splayDown(x);
+        if (x->isroot) return;
+		while (!x->isroot){
+			splayDown(x->par); splayDown(x);
+			if (x->par->isroot){
+				if (x->par->child[0] == x)
+					splayLrot(x);
+				else
+					splayRrot(x);
+			}
+			else{
+				splayDown(x->par->par);
+				SplayNode *dad = x->par, *grandpa = x->par->par;
+				bool iAmLeft = (dad->child[0] == x), dadIsLeft = (grandpa->child[0] == dad);
+				if (iAmLeft == dadIsLeft){
+					if (iAmLeft){
+						splayLrot(dad);
+						splayLrot(x);
+					}
+					else{
+						splayRrot(dad);
+						splayRrot(x);
+					}
+				}
+				else{
+					if (iAmLeft){
+						splayLrot(x);
+						splayRrot(x);
+					}
+					else{
+						splayRrot(x);
+						splayLrot(x);
+					}
+				}
+			}
+		}
     }
 public:
     //cut the edge between x and it's parent
