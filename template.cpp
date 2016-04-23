@@ -171,8 +171,52 @@ class AAATree
 
 
 private:  //private functions for splay
-	void splayUp(SplayNode *x);
-	void splayDown(SplayNode *x);
+	void splayUp(SplayNode *x){
+		x->size = 1;
+		if (x->child[0]) x->size += x->child[0]->size;
+		if (x->child[1]) x->size += x->child[1]->size;
+
+		x->linksum = x->data;
+		if (x->child[0]) x->linksum += x->child[0]->linksum;
+		if (x->child[1]) x->linksum += x->child[1]->linksum;
+
+		x->subsum = x->data;
+		if (x->root) x->subsum += x->root->sum;
+		if (x->child[1]) x->subsum += x->child[1]->subsum;
+	}
+
+	void splayDown(SplayNode *x){
+		if (x->reverse){
+			if (x->child[0]) x->child[0]->reverse = true;
+			if (x->child[1]) x->child[1]->reverse = true;
+			SplayNode *tmp = x->child[0]; x->child[0] = x->child[1]; x->child[1] = tmp;
+			x->reverse = false;
+		}
+		if (x->same != 0){   //To modify: Only consider the case of integer!
+			x->data = x->same;
+			if (x->child[0]){
+				x->child[0]->same = x->same;
+				x->child[0]->plus = 0;
+			}
+			if (x->child[1]){
+				x->child[1]->same = x->same;
+				x->child[1]->plus = 0;
+			}
+			x->linksum = x->size * x->same;
+			x->subsum = (  (x->child[1] ? x->child[1]->size : 0) +1) * x->same;
+			x->same = 0;
+		}
+		if (x->plus != 0){
+			x->data += x->plus;
+			if (x->child[0]) x->child[0]->plus += x->plus;
+			if (x->child[1]) x->child[1]->plus += x->plus;
+			x->linksum += (x->size * x->plus);
+			x->subsum += (  (x->child[1] ? x->child[1]->size : 0) +1) * x->plus;
+			x->plus = 0;
+		}
+	}
+
+
 	void splayLrot(SplayNode *x){
 		SplayNode *p = x->par;
 		splayDown(p); splayDown(x);
@@ -188,6 +232,7 @@ private:  //private functions for splay
 		p->child[0] = x->child[1];
 		x->child[1] = p;
 		splayUp(p);
+		splayUp(x);
 	}
 	void splayRrot(SplayNode *x){
 		SplayNode *p = x->par;
@@ -204,42 +249,48 @@ private:  //private functions for splay
 		p->child[1] = x->child[0];
 		x->child[0] = p;
 		splayUp(p);
+		splayUp(x);
 	}
 
 
 public:
     //Insert SplayNode y into the splay which contain SplayNode x
-    void insert(SplayNode *y, SplayNode *x)
+    /*void insert(SplayNode *y, SplayNode *x)
     {
 		while (!x->isroot) x = x->par;
 		for (;;){
 			if (y->? < x->?){
-				x = x->left;
-				if (x == NULL){
+				if (x->left == NULL){
 					x->left = y;
 					y->par = x;
+					maintain(x);
 					return;
 				}
+				x = x->left;
 			}
 			else{
-				x = x->right;
-				if (x == NULL){
+				if (x->right == NULL){
 					x->right = y;
 					y->par = x;
+					maintain(x);
 					return;
 				}
+				x = x->right;
 			}
 		}
-    }
+    }*/
     //Maintain Data of SplayNode x
     void maintain(SplayNode *x)
     {
-        
+		splayDown(x);
+		if (x->child[0]) splayDown(x->child[0]);
+		if (x->child[1]) splayDown(x->child[1]);
+		splayUp(x);
     }
     //pushdown flags of SplayNode x 
     void pushdown(SplayNode *x)
     {
-        
+		splayDown(x);
     }
     void splay(SplayNode *x)
     {
