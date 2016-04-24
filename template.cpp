@@ -52,7 +52,7 @@ class AAATree
         Data data, linksum, subsum, sum, plus, same;
         int size, num;
         bool isroot, reverse;
-        SplayNode *child[2], *parent;
+        SplayNode *child[2], *par;
         TreapNode *node, *root;
         SplayNode() {}
         SplayNode(Data data, int num) : data(data), num(num)
@@ -60,7 +60,7 @@ class AAATree
             size = 1;
             isroot = true; 
             reverse = false;
-            child[0] = child[1] = parent = NULL;
+            child[0] = child[1] = par = NULL;
             node = new TreapNode(data, this, num);
             root = node; 
         } 
@@ -70,7 +70,7 @@ class AAATree
             size = other.size();
             isroot = other.isroot;
             reverse = other.reverse;
-            child[0] = child[1] = parent = NULL;
+            child[0] = child[1] = par = NULL;
             node = new TreapNode(*(other.node));
             node -> node = this;
         }
@@ -180,9 +180,9 @@ private:  //private functions for splay
 		if (x->child[0]) x->linksum += x->child[0]->linksum;
 		if (x->child[1]) x->linksum += x->child[1]->linksum;
 
-		x->subsum = x->data;
+		x->subsum = 0;
 		if (x->root) x->subsum += x->root->sum;
-		if (x->child[1]) x->subsum += x->child[1]->subsum;
+		if (x->child[0]) x->subsum += x->child[0]->subsum;
 	}
 
 	void splayDown(SplayNode *x){
@@ -203,7 +203,6 @@ private:  //private functions for splay
 				x->child[1]->plus = 0;
 			}
 			x->linksum = x->size * x->same;
-			x->subsum = (  (x->child[1] ? x->child[1]->size : 0) +1) * x->same;
 			x->same = 0;
 		}
 		if (x->plus != 0){
@@ -211,7 +210,6 @@ private:  //private functions for splay
 			if (x->child[0]) x->child[0]->plus += x->plus;
 			if (x->child[1]) x->child[1]->plus += x->plus;
 			x->linksum += (x->size * x->plus);
-			x->subsum += (  (x->child[1] ? x->child[1]->size : 0) +1) * x->plus;
 			x->plus = 0;
 		}
 	}
@@ -279,6 +277,23 @@ public:
 			}
 		}
     }*/
+	void AAA_remove(SplayNode *tar, int id){
+		remove(tar->root, id);
+		splayUp(tar);
+		while (!tar->isroot){
+			tar = tar->par;
+			splayUp(tar);
+		}
+	}
+
+	void AAA_insert(SplayNode *tar, TreapNode *root, SplayNode *ctx, int num){
+		insert(root, ctx, num);
+		splayUp(tar);
+		while (!tar->isroot){
+			tar = tar->par;
+			splayUp(tar);
+		}
+	}
     //Maintain Data of SplayNode x
     void maintain(SplayNode *x)
     {
